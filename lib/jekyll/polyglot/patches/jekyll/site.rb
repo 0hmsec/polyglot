@@ -231,37 +231,74 @@ module Jekyll
     # matches href="baseurl/foo/bar-baz" href="/foo/bar-baz" and others like it
     # avoids matching excluded files.  prepare makes sure
     # that all @exclude dirs have a trailing slash.
+    # Uncomment the below function for the default one
+    # def relative_url_regex(disabled = false)
+    #   regex = ''
+    #   unless disabled
+    #     @exclude.each do |x|
+    #       regex += "(?!#{x})"
+    #     end
+    #     @languages.each do |x|
+    #       regex += "(?!#{x}\/)"
+    #     end
+    #   end
+    #   start = disabled ? 'ferh' : 'href'
+    #   %r{#{start}="?#{@baseurl}/((?:#{regex}[^,'"\s/?.]+\.?)*(?:/[^\]\[)("'\s]*)?)"}
+    # end
+
     def relative_url_regex(disabled = false)
-      regex = ''
+      regex_parts = []
+    
       unless disabled
-        @exclude.each do |x|
-          regex += "(?!#{x})"
-        end
-        @languages.each do |x|
-          regex += "(?!#{x}\/)"
-        end
+        # Collect exclusion patterns for directories and languages
+        regex_parts += @exclude.map { |x| "(?!#{Regexp.escape(x)})" }
+        regex_parts += @languages.map { |x| "(?!#{Regexp.escape(x)}/)" }
       end
-      start = disabled ? 'ferh' : 'href'
-      %r{#{start}="?#{@baseurl}/((?:#{regex}[^,'"\s/?.]+\.?)*(?:/[^\]\[)("'\s]*)?)"}
-    end
+    
+      # Combine the exclusion patterns properly
+      exclusions = regex_parts.join
+    
+      start = disabled ? 'href' : 'href'
+      
+      %r{#{start}="?#{Regexp.escape(@baseurl)}/((?:#{exclusions}[^,'"\s/?.]+\.?)*(?:/[^\]\[)("'\s]*)?)"}
+    end    
 
     # a regex that matches absolute urls in a html document
     # matches href="http://baseurl/foo/bar-baz" and others like it
     # avoids matching excluded files.  prepare makes sure
     # that all @exclude dirs have a trailing slash.
+    # Uncomment the below function for the default one
+    # def absolute_url_regex(url, disabled = false)
+    #   regex = ''
+    #   unless disabled
+    #     @exclude.each do |x|
+    #       regex += "(?!#{x})"
+    #     end
+    #     @languages.each do |x|
+    #       regex += "(?!#{x}\/)"
+    #     end
+    #   end
+    #   start = disabled ? 'ferh' : 'href'
+    #   %r{(?<!hreflang="#{@default_lang}" )#{start}="?#{url}#{@baseurl}/((?:#{regex}[^,'"\s/?.]+\.?)*(?:/[^\]\[)("'\s]*)?)"}
+    # end
+
     def absolute_url_regex(url, disabled = false)
-      regex = ''
+      regex_parts = []
+    
       unless disabled
-        @exclude.each do |x|
-          regex += "(?!#{x})"
-        end
-        @languages.each do |x|
-          regex += "(?!#{x}\/)"
-        end
+        # Collect exclusion patterns for directories and languages
+        regex_parts += @exclude.map { |x| "(?!#{Regexp.escape(x)})" }
+        regex_parts += @languages.map { |x| "(?!#{Regexp.escape(x)}/)" }
       end
-      start = disabled ? 'ferh' : 'href'
-      %r{(?<!hreflang="#{@default_lang}" )#{start}="?#{url}#{@baseurl}/((?:#{regex}[^,'"\s/?.]+\.?)*(?:/[^\]\[)("'\s]*)?)"}
-    end
+    
+      # Combine exclusion patterns
+      exclusions = regex_parts.join
+    
+      start = disabled ? 'href' : 'href'
+      
+      # Build the regex safely
+      %r{(?<!hreflang="#{Regexp.escape(@default_lang)}" )#{start}="?#{Regexp.escape(url)}#{Regexp.escape(@baseurl)}/((?:#{exclusions}[^,'"\s/?.]+\.?)*(?:/[^\]\[)("'\s]*)?)"}
+    end    
 
     def relativize_urls(doc, regex)
       return if doc.output.nil?
