@@ -245,22 +245,41 @@ module Jekyll
     #   start = disabled ? 'ferh' : 'href'
     #   %r{#{start}="?#{@baseurl}/((?:#{regex}[^,'"\s/?.]+\.?)*(?:/[^\]\[)("'\s]*)?)"}
     # end
+    # Chatgpt's code:
+    # def relative_url_regex(disabled = false)
+    #   regex_parts = []
+    
+    #   unless disabled
+    #     # Collect exclusion patterns for directories and languages
+    #     regex_parts += @exclude.map { |x| "(?!#{Regexp.escape(x)})" }
+    #     regex_parts += @languages.map { |x| "(?!#{Regexp.escape(x)}/)" }
+    #   end
+    
+    #   # Combine the exclusion patterns properly
+    #   exclusions = regex_parts.join
+    
+    #   start = disabled ? 'ferh' : 'href'
+      
+    #   %r{#{start}="?#{Regexp.escape(@baseurl)}/((?:#{exclusions}[^,'"\s/?.]+\.?)*(?:/[^\]\[)("'\s]*)?)"}
+    # end
 
     def relative_url_regex(disabled = false)
-      regex_parts = []
+      regex = ''
     
+      # Build the regex to exclude specific directories and language prefixes
       unless disabled
-        # Collect exclusion patterns for directories and languages
-        regex_parts += @exclude.map { |x| "(?!#{Regexp.escape(x)})" }
-        regex_parts += @languages.map { |x| "(?!#{Regexp.escape(x)}/)" }
+        @exclude.each do |x|
+          regex += "(?!#{Regexp.escape(x)})"
+        end
+        @languages.each do |x|
+          regex += "(?!#{Regexp.escape(x)}/)"
+        end
       end
     
-      # Combine the exclusion patterns properly
-      exclusions = regex_parts.join
+      start = disabled ? 'ferh' : 'href'
     
-      start = disabled ? 'href' : 'href'
-      
-      %r{#{start}="?#{Regexp.escape(@baseurl)}/((?:#{exclusions}[^,'"\s/?.]+\.?)*(?:/[^\]\[)("'\s]*)?)"}
+      # Use the assembled regex to match URLs
+      %r{#{start}="?#{Regexp.escape(@baseurl)}/((?:#{regex}[^,'"\s/?.]+\.?)*(?:/[^\]\[)("'\s]*)?)"}
     end    
 
     # a regex that matches absolute urls in a html document
@@ -281,24 +300,43 @@ module Jekyll
     #   start = disabled ? 'ferh' : 'href'
     #   %r{(?<!hreflang="#{@default_lang}" )#{start}="?#{url}#{@baseurl}/((?:#{regex}[^,'"\s/?.]+\.?)*(?:/[^\]\[)("'\s]*)?)"}
     # end
-
+    # Chatgpt's code:
+    # def absolute_url_regex(url, disabled = false)
+    #   regex_parts = []
+    
+    #   unless disabled
+    #     # Collect exclusion patterns for directories and languages
+    #     regex_parts += @exclude.map { |x| "(?!#{Regexp.escape(x)})" }
+    #     regex_parts += @languages.map { |x| "(?!#{Regexp.escape(x)}/)" }
+    #   end
+    
+    #   # Combine exclusion patterns
+    #   exclusions = regex_parts.join
+    
+    #   start = disabled ? 'ferh' : 'href'
+      
+    #   # Build the regex safely
+    #   %r{(?<!hreflang="#{Regexp.escape(@default_lang)}" )#{start}="?#{Regexp.escape(url)}#{Regexp.escape(@baseurl)}/((?:#{exclusions}[^,'"\s/?.]+\.?)*(?:/[^\]\[)("'\s]*)?)"}
+    # end
+    
     def absolute_url_regex(url, disabled = false)
-      regex_parts = []
+      regex = ''
     
       unless disabled
-        # Collect exclusion patterns for directories and languages
-        regex_parts += @exclude.map { |x| "(?!#{Regexp.escape(x)})" }
-        regex_parts += @languages.map { |x| "(?!#{Regexp.escape(x)}/)" }
+        @exclude.each do |x|
+          regex += "(?!#{Regexp.escape(x)})"
+        end
+        @languages.each do |x|
+          regex += "(?!#{Regexp.escape(x)}/)"
+        end
       end
     
-      # Combine exclusion patterns
-      exclusions = regex_parts.join
+      start = disabled ? 'ferh' : 'href'
     
-      start = disabled ? 'href' : 'href'
-      
-      # Build the regex safely
-      %r{(?<!hreflang="#{Regexp.escape(@default_lang)}" )#{start}="?#{Regexp.escape(url)}#{Regexp.escape(@baseurl)}/((?:#{exclusions}[^,'"\s/?.]+\.?)*(?:/[^\]\[)("'\s]*)?)"}
-    end    
+      # Build the regex safely with exclusion and proper escaping
+      %r{(?<!hreflang="#{Regexp.escape(@default_lang)}" )#{start}="?#{Regexp.escape(url)}#{Regexp.escape(@baseurl)}/((?:#{regex}[^,'"\s/?.]+\.?)*(?:/[^\]\[)("'\s]*)?)"}
+    end
+    
 
     def relativize_urls(doc, regex)
       return if doc.output.nil?
